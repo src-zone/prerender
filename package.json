@@ -5,8 +5,9 @@
     "license": "Apache-2.0",
     "homepage": "https://bitbucket.org/src-zone/ng-utils",
     "author": "The Source Zone",
-    "bugs": "https://bitbucket.org/src-zone/ng-utils/issues",
-    "repository": "bitbucket:src-zone/ng-utils",
+    "bugs": "https://github.com/src-zone/ng-utils/issues",
+    "repository": "github:src-zone/ng-utils",
+    "homepage": "https://github.com/src-zone/ng-utils",
     "keywords": [
         "angular",
         "angular cli",
