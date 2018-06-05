@@ -1,0 +1,8 @@
+/.nyc_output/
+/coverage/
+/src/
+/test/
+/.istanbul.yml
+/.nycrc.json
+/jasmine.json
+/tsconfig.json
