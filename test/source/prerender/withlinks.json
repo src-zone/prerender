@@ -1,0 +1,8 @@
+{
+    "template": "index.html",
+    "seed": "index.html",
+    "bootstrap": [
+        "[render-app]"
+    ],
+    "appId": "blx-prerender"
+}

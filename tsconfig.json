@@ -10,11 +10,11 @@
       "noEmitOnError": true,
       "noImplicitAny": true,
       "target": "es5",
-      "types": [
-        "node"
-      ]
+      "sourceMap": true
     },
     "files": [
-      "src/transpile.ts"
+      "src/transpile.ts",
+      "src/prerender.ts",
+	    "src/prerender.spec.ts"
     ]
 }

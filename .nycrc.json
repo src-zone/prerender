@@ -1,0 +1,19 @@
+{
+    "verbose": false,
+    "exclude": [
+        "**/*.spec.*"
+    ],
+    "reporter": [
+        "lcov",
+        "text-summary",
+        "html",
+        "json"
+    ],
+    "extension": [".ts"],
+    "check-coverage": true,
+    "per-file": true,
+    "lines": 95,
+    "statements": 95,
+    "functions": 100,
+    "branches": 95
+}

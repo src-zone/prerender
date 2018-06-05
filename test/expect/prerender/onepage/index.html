@@ -1,0 +1,16 @@
+<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Title</title>
+    <meta name="description" content="This is a HTML file for testing ng-prerender">
+  <style ng-transition="blx-prerender">div.some-class { color: blue; }</style></head>
+  <body>
+    <h1>Title</h1>
+    <div render-app="" ng-version="5.0.5">this is the rendered root element</div>
+    <!-- The script will change the content of the div[render-app] element,
+      and add some additional elements including STYLE & SCRIPT tags
+      that should be handled differently, based on their context -->
+    <script src="scripts/render.js"></script>
+  
+
+</body></html>

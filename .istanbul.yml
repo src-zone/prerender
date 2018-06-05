@@ -1,0 +1,10 @@
+verbose: false
+instrumentation:
+    include-all-sources: true
+    root: dist
+    excludes: ['dist/**/*.spec.js']
+    includes: ['dist/**/*.js']
+reporting:
+    print: summary
+    reports:
+        - lcov

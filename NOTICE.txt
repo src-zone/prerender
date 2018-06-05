@@ -1,5 +1,5 @@
    Blox.Src.Zone - Tools for Developers
-   Copyright 2017 by Src.Zone (Amsterdam),
+   Copyright 2017-2018 by Src.Zone (Amsterdam),
    https://blox.src.zone/
 
    This product includes software developed by The.Src.Zone
