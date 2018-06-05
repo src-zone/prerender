@@ -1,22 +1,14 @@
 const { join } = require('path');
-import { PrerenderSettings, prerender } from './prerender/prerender';
+import * as fs from 'fs-extra';
+import * as path from 'path';
+import * as yargs from 'yargs';
+import * as chalk from 'chalk';
+import { prerender } from './prerender/prerender';
+import { prerenderConfig } from './prerender/cli';
 
-// Settings:
-const PORT = 4000;
-const HOST = `http://localhost:${PORT}`;
-const DIST = join(process.cwd(), 'dist');
-const SEED = 'material';
-const ELM = 'blox-app';
-
-prerender({
-  dist: DIST,
-  template: SEED + '.html',
-  seed: SEED,
-  bootstrap: [ELM],
-  appId: 'prerender',
-  port: PORT
-}).then(() => console.log('Done!'))
-  .catch(err => {
-    console.error('Error: ', err);
-    process.exit(1);
-});
+prerender(prerenderConfig)
+    .then(() => console.log(chalk.default.green('Done!')))
+    .catch(err => {
+        console.error(chalk.default.red('Error: ', err));
+        process.exit(1);
+    });

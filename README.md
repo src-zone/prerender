@@ -1,9 +1,9 @@
 # Utilities for working with Angular CLI projects
 
-This package currently contains one utility script: ng-transpile, which makes it possible to work with
+This package currently contains one utility script: blx-transpile, which makes it possible to work with
 es2015 (or newer) javascript imports in projects managed with Angular CLI.
 
-## ng-transpile
+## blx-transpile
 
 If you want to build an Angular application for es5, Angular CLI has the
 inconvenient limitation that you can't import Javascript sources that
@@ -13,23 +13,12 @@ This utility makes it possible to create es5 compatible Angular applications,
 even when you import third-party javascript code that uses es2015 (or newer)
 syntax.
 
-The ng-transpile script only works with Angular 1.5.0 or later (1.5.0 release
-candidates also work). So to get started, install the latest Angular CLI for your project,
-and install this utility:
+The blx-transpile script only works with Angular CLI 1.5.0 or later. So to get
+started, install the latest Angular CLI for your project, and install this
+utility:
 
 ```
-npm install --save-dev @angular/cli@1.5.0-rc.2 @blox/ng-utils
-```
-
-Angular CLI can only fully work with es2015 source files if you set the
-typescript target of your application to es2015. So in the tsconfig.json
-in the root of your angular project, change the line: `"target": "es5"`
-into `"target": "es2015"` (don't worry, in the next steps we'll make
-the build distribution of your app compatible with whatever browser
-you like):
-
-```
-"target": "es2015"
+npm install --save-dev @angular/cli @blox/ng-utils
 ```
 
 Next in your package.json add/change the following scripts:
@@ -37,17 +26,14 @@ Next in your package.json add/change the following scripts:
 ```
   "scripts": {
     ...
-    "start": "ng serve --aot",
-    "transpile": "ng-transpile --dir dist --verbose",
-    "build": "ng build --prod --build-optimizer && npm run transpile",
+    "transpile": "blx-transpile --dir dist --verbose",
+    "build": "ng build --prod && npm run transpile",
     ...
   },
 
 ```
 
 What you just did:
-* Since the Angular JIT compiler doesn't work with the es2015 code that we're now generating,
-  we added the '--aot' flag to use the AOT compiler when starting the application.
 * To create a build that is compatible with older browsers that don't support es2015 yet,
   we added a step to the build to transform the es2015 scripts to es5, and change the includes
   in the index.html to use those transpiled sources instead.
@@ -55,7 +41,7 @@ What you just did:
 From now on, don't forget to use the npm goals `npm run start` and `npm run build`, instead
 of calling `ng serve` and `ng build` for starting or building your app.
 
-## options
+### options
 
 | Option                   | Default              | Description                     |
 | ------------------------ | -------------------- | ------------------------------- |
@@ -66,6 +52,6 @@ of calling `ng serve` and `ng build` for starting or building your app.
 
 ## Quick Links
 
-* [Instructions for using ng-transpile](http://blox.src.zone/material#/guides/ng-transpile)
-* [Repository](https://bitbucket.org/src-zone/ng-utils)
-* [Issues](https://bitbucket.org/src-zone/ng-utils/issues?status=new&status=open)
+* [Instructions for using blx-transpile](https://blox.src.zone/material/guides/ie11)
+* [Repository](https://github.com/src-zone/ng-utils)
+* [Issues](https://github.com/src-zone/ng-utils/issues)

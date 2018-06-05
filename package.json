@@ -29,7 +29,8 @@
         "path": "^0.12.7",
         "puppeteer": "^1.4.0",
         "ts-node": "^6.1.0",
-        "uglify-es": "^3.3.9"
+        "uglify-es": "^3.3.9",
+        "yargs": "^11.0.0"
     },
     "devDependencies": {
         "@types/babel-core": "^6.25.4",
@@ -40,6 +41,7 @@
         "@types/jasmine-expect": "^3.8.1",
         "@types/puppeteer": "^1.3.2",
         "@types/rimraf": "^2.0.2",
+        "@types/yargs": "^11.0.0",
         "fs-extra": "^6.0.1",
         "jasmine": "^3.1.0",
         "jasmine-core": "^3.1.0",
@@ -50,7 +52,7 @@
         "typescript": "^2.9.1"
     },
     "bin": {
-        "ng-transpile": "bin/ng-transpile",
-        "ng-prerender": "bin/ng-prerender"
+        "transpile": "bin/blx-transpile",
+        "prerender": "bin/blx-prerender"
     }
 }
