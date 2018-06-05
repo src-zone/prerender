@@ -71,7 +71,7 @@ if (!dir) {
 const rootDir = path.resolve(process.cwd(), dir);
 
 // get a list of all javascript scripts that must be transpiled:
-const jsSources = globSync(path.join(rootDir, '*.bundle.js')).map(js => path.basename(js));
+const jsSources = globSync(path.join(rootDir, '*.js')).map(js => path.basename(js));
 const htmlSources = globSync(path.join(rootDir, '*.html')).map(js => path.basename(js));
 
 function getTranspiledName(name: string) {
