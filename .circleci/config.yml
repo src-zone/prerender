@@ -1,0 +1,79 @@
+# CircleCI 2.0 configuration file
+version: 2
+defaults: &defaults
+  working_directory: ~/repo
+  docker:
+    - image: circleci/node:8.11.1-browsers
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package-lock.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      - run: npm install
+      - run: npm run build
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package-lock.json" }}
+      - persist_to_workspace: 
+          root: .
+          paths:
+            - node_modules
+            - dist
+  test:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run Unit Tests
+          command: npm run test || touch failure.marker
+      - store_artifacts:
+          path: coverage
+      - run:
+          name: Upload Coverage Data to Codecov
+          command: bash <(curl -s https://codecov.io/bash) -F unittest
+      - run:
+          name: Check for Test Failures
+          command: if [ -f failure.marker ] ; then exit 127; else exit 0; fi
+  publish:
+    <<: *defaults
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Authenticate with NPM
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > ~/.npmrc
+      - run:
+          name: Publish Blox Utils
+          command: npm publish
+
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
+      - test:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /.*/
+      - publish:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*([-].*)?$/
+            branches:
+              ignore: /.*/
