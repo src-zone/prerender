@@ -1,5 +1,5 @@
 let links = [];
-if (location.href.endsWith('4000/')) {
+if (location.href.endsWith('8080/')) {
   links.push('link1');
   links.push('link2');
   links.push('link2/');

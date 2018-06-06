@@ -4,5 +4,5 @@
     "bootstrap": [
         "[render-app]"
     ],
-    "appId": "blx-prerender"
+    "transition": "blx-prerender"
 }

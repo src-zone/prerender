@@ -2,8 +2,6 @@
     "template": "index.html",
     "seed": "index",
     "htmlSuffix": ".html",
-    "bootstrap": [
-        "[render-app]"
-    ],
-    "appId": "blx-prerender"
+    "bootstrap": "[render-app]",
+    "transition": "blx-prerender"
 }

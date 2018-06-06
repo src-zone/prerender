@@ -1,9 +1,7 @@
 {
     "template": "test.html",
-    "seed": "test",
+    "seed": ["test"],
     "htmlSuffix": ".html",
-    "bootstrap": [
-        "[render-app]"
-    ],
-    "appId": "blx-prerender"
+    "bootstrap": "[render-app]",
+    "transition": "blx-prerender"
 }

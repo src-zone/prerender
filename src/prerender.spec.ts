@@ -31,48 +31,70 @@ describe('prerender cli', (() => {
 
     it('default values substituted for unassigned fields', (() => {
         expect(JSON.stringify(tryConfig({
-            bootstrap: ['boot-element'],
-            appId: 'myApp',
+            bootstrap: ['boot-element']
         }))).toEqual(JSON.stringify({
             root: 'dist',
             template: 'index.html',
-            seed: 'index.html',
+            seed: ['index.html'],
+            transition: 'blx-transition',
             port: 8080,
-            bootstrap: ['boot-element'],
-            appId: 'myApp'
+            bootstrap: ['boot-element']
         }));
     }));
 
     it('required fields must be given', (() => {
-        expect(() => {tryConfig({bootstrap: ['boot-element']}); }).toThrowError(/.* field is missing.*/);
+        expect(() => {tryConfig({transition: 'x-y'}); }).toThrowError(/.* field is missing.*/);
+        expect(() => {tryConfig({bootstrap: ['boot-element'], transition: null}); }).toThrowError(/.* field is missing.*/);
     }));
 
     it('fields must have expected type', (() => {
         expect(() => {
-            tryConfig({bootstrap: ['boot-element'],appId: 'myApp', port: 'wrong'}); }
+            tryConfig({bootstrap: ['boot-element'], port: 'wrong'}); }
         ).toThrowError(/.* must have a number value.*/);
     }));
 
-    it('array type fields must have an array value', (() => {
+    it('array type fields must have an array value or element type value', (() => {
+        expect(tryConfig({bootstrap: 'boot-element'}).bootstrap).toEqual(['boot-element']);
         expect(() => {
-            tryConfig({bootstrap: 'boot-element', appId: 'myApp'}); }
+            tryConfig({bootstrap: 123}); }
         ).toThrowError(/.* must be an array.*/);
     }));
 
     it('required array fields must not be empty', (() => {
         expect(() => {
-            tryConfig({bootstrap: [], appId: 'myApp'}); }
+            tryConfig({bootstrap: []}); }
         ).toThrowError(/.* must not be empty.*/);
     }));
 
     it('array field values must have correct type', (() => {
         expect(() => {
-            tryConfig({bootstrap: [1, 2, 3], appId: 'myApp'}); }
+            tryConfig({bootstrap: [1, 2, 3]}); }
         ).toThrowError(/.* must have string members only.*/);
     }));
 
-    it('', (() => {
+    it('template field must not start with / or walk up directory paths', (() => {
+        expect(() => {
+            tryConfig({bootstrap: ['boot-element'], template: '/'}); }
+        ).toThrowError(/.* invalid value for template field.*/);
+        expect(() => {
+            tryConfig({bootstrap: ['boot-element'], template: '../abc'}); }
+        ).toThrowError(/.* invalid value for template field.*/);
+        expect(() => {
+            tryConfig({bootstrap: ['boot-element'], template: 'x/..'}); }
+        ).toThrowError(/.* invalid value for template field.*/);
+        expect(() => {
+            tryConfig({bootstrap: ['boot-element'], template: 'abc/../xyz'}); }
+        ).toThrowError(/.* invalid value for template field.*/);
+        expect(() => {
+            tryConfig({bootstrap: ['boot-element'], template: 'index/'}); }
+        ).toThrowError(/.* invalid value for template field.*/);
+    }));
 
+    it('transition fields must be checked', (() => {
+        expect(() => {tryConfig({bootstrap: ['x'], transition: '$'}); }).toThrowError(/.* invalid value for transition field.*/);
+        expect(() => {tryConfig({bootstrap: ['x'], transition: 'a==b'}); }).toThrowError(/.* invalid value for transition field.*/);
+        expect(() => {tryConfig({bootstrap: ['x'], transition: '=a'}); }).toThrowError(/.* invalid value for transition field.*/);
+        expect(tryConfig({bootstrap: ['x'], transition: 'a='}).transition).toBe('a=');
     }));
 
     function tryConfig(config: any) {
@@ -97,9 +119,9 @@ describe('prerender rendering', (() => {
     for (let target of targets) {
         describe(target, (() => {
             const root = setUpTarget(target);
-            const settings = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), SRC_DIST + target + '.json')).toString());
+            yargs(['--config', path.resolve(process.cwd(), SRC_DIST + target + '.json')]).argv;
+            const settings = readConfig();
             settings.root = root;
-            settings.port = 4000;
             it('rendering', ((done) => {
                 prerender(settings).then(() => {
                     expectEqualDist(target);

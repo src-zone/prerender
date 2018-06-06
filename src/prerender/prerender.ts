@@ -16,20 +16,27 @@ export interface PrerenderSettings {
      */
     template: string,
     /**
-     * The url to start the prerender from. Typically equal to the value given for property 'template',
+     * The url(s) to start the prerender from. Typically equal to the value given for property 'template',
      * unless you want to serve files under different names, e.g. by removing the '.html' suffix, or by
      * serving the 'index.html' under '/'.
      */
-    seed: string,
+    seed: string[],
     /**
      * Selector for the element(s) that contain (and bootstrap) your web app. In an angular app this is
      * the selector of your bootstrap component(s).
      */
     bootstrap: string[],
-
-    appId: string,
     /**
-     * The port to use for the server while prerendering your site. The default is 4000, but any valid open port
+     * Attribute that will be added to head elements that where added by the bootstrap/render, but not part
+     * of the original template. E.g. to style tags that your web application dynamically added to the page.
+     * This allows for a run-time 'transition', in which web-application remove elements with these tags,
+     * to undo changes made during the prerender.
+     * Can be an attributename, or an attributename followed by an equals sign followed by a value.
+     * E.g.: blx-transition, or blx-transition=my-app. The default value is blx-transition.
+     */
+    transition: string,
+    /**
+     * The port to use for the server while prerendering your site. The default is 8080, but any valid open port
      * will do.
      */
     port: number,
@@ -42,7 +49,7 @@ export interface PrerenderSettings {
     /**
      * Sets the file that will be used for page urls that end with a '/'. Thus page 'a/b/' will be stored
      * as a file under the name directoryIndex in the 'a/b' directory. If not set, the page will be stored
-     * with under the name of the directory with the htmlSuffix added. So when directoryIndex is not set,
+     * under the name of the directory with the htmlSuffix added. So when directoryIndex is not set,
      * and htmlSuffix = ".html", page 'a/b/' will be stored under 'a/b.html'.
      */
     directoryIndex?: string
@@ -66,10 +73,6 @@ export async function prerender(settings: PrerenderSettings) {
     let renderScope = await initializeRenderScope(settings);
 
     let templateRenderedContent: string | null = null;
-    // During the rendering any request for the template should return
-    // the template as created by createTemplate. After the rest of the site
-    // is rendererd, we will overwrite this with the actual rendered content:
-    fs.writeFileSync(renderScope.templateFile, renderScope.templateContent);
 
     const server = startServer(renderScope);
     const page = await renderScope.browser.newPage();
@@ -83,14 +86,6 @@ export async function prerender(settings: PrerenderSettings) {
     await page.close();
     await renderScope.browser.close();
     server.close();
-
-    if (templateRenderedContent) {
-        fs.writeFileSync(renderScope.templateFile, templateRenderedContent);
-        log(chalk.default.green(`Overwrite seed template: ${renderScope.templateFile}`));
-    } else {
-        fs.writeFileSync(renderScope.templateFile, renderScope.originalTemplateContent);
-        log(chalk.default.green(`Seed template is not a (linked) page, overwriting with original content: ${renderScope.templateFile}`));        
-    }
 }
 
 async function renderNextPage(renderScope: RenderScope, page: puppeteer.Page, templateRenderedContent: string | null) {
@@ -112,13 +107,8 @@ async function renderNextPage(renderScope: RenderScope, page: puppeteer.Page, te
 
     const dir = path.dirname(file);
     fs.mkdirsSync(dir);
-    if (file.toLowerCase() !== renderScope.templateFile.toLowerCase()) {
-        fs.writeFileSync(file, content);
-        log(chalk.default.green(`Rendered: ${file}`));
-    } else {// render at the end, since it will overwrite the template
-        log(chalk.default.green(`Rendered: ${file} (not written yet since this is also the seed template)`));
-        templateRenderedContent = content;
-    }
+    fs.writeFileSync(file, content);
+    log(chalk.default.green(`Rendered: ${file}`));
 
     // Compute new todoPages & donePages:
     renderScope.donePages.add(pagePath);
@@ -180,7 +170,7 @@ async function initializeRenderScope(settings: PrerenderSettings) {
     const originalTemplateContent = fs.readFileSync(templateFile).toString();
     const browser = await puppeteer.launch();    
     return {
-        todoPages: new Set([settings.seed]),
+        todoPages: new Set(settings.seed),
         donePages: new Set<string>(),
         browser: browser,
         settings: settings,
@@ -198,7 +188,7 @@ async function createTemplate(originalContent: string, browser: any): Promise<st
     await page.evaluate(/* istanbul ignore next */() => {
         let elms = (<any>document).querySelectorAll('head > *');
         for (let i = 0; i != elms.length; ++i)
-            elms[i].setAttribute('ng-tsz-prerender', 'source');
+            elms[i].setAttribute('blx-tsz-prerender', 'source');
     });
     const result = await page.content();
     page.close();
@@ -209,17 +199,17 @@ async function rewriteHead(content: string, settings: PrerenderSettings, browser
     let page = await browser.newPage();
     await page.setJavaScriptEnabled(false);
     await page.setContent(content);
-    await page.evaluate(/* istanbul ignore next */(appId: string) => {
+    await page.evaluate(/* istanbul ignore next */(transition: string[]) => {
         let elms = (<any>document).querySelectorAll('head > *');
         for (let i = 0; i != elms.length; ++i) {
-            if (elms[i].getAttribute('ng-tsz-prerender') === 'source')
-                elms[i].removeAttribute('ng-tsz-prerender')
-            else if (elms[i].tagName === 'STYLE' && appId)
-                elms[i].setAttribute('ng-transition', appId);
+            if (elms[i].getAttribute('blx-tsz-prerender') === 'source')
+                elms[i].removeAttribute('blx-tsz-prerender')
+            else if (elms[i].tagName === 'STYLE' && transition)
+                elms[i].setAttribute(transition[0], transition.length > 1 ? transition[1] : '');
             else
                 elms[i].parentElement.removeChild(elms[i]);
         }
-    }, settings.appId);
+    }, settings.transition.split('='));
     const result = await page.content();
     page.close();
     return result;
@@ -256,8 +246,16 @@ async function rewriteBody(content: string, templateContent: string, settings: P
 
 function startServer(renderScope: RenderScope) {
     const app = express();
-    // Serve static files as is:
-    app.get('*.*', express.static(renderScope.settings.root));
+    // Serve direct requests for the template with templateContent,
+    // Serve directory listing requests with templateContext
+    app.get('*', (req, res, next) => {
+        if ((req.path === ('/' + renderScope.settings.template)) || req.path.endsWith('/'))
+            return res.send(renderScope.templateContent);
+        else
+            next();
+    });
+    // Serve existing files as is:
+    app.get('*', express.static(renderScope.settings.root));
     // Serve templateContent for any other request:
     app.get('*', (_, res) => res.send(renderScope.templateContent));
     // Start the express server:

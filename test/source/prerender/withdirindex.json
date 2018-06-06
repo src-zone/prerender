@@ -5,6 +5,6 @@
     "bootstrap": [
         "[render-app]"
     ],
-    "appId": "blx-prerender",
+    "transition": "blx-prerender",
     "directoryIndex": "index.html"
 }

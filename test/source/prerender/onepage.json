@@ -1,8 +1,6 @@
 {
     "template": "index.html",
-    "seed": "index.html",
-    "bootstrap": [
-        "[render-app]"
-    ],
-    "appId": "blx-prerender"
+    "seed": ["index.html"],
+    "bootstrap": ["[render-app]"],
+    "transition": "ng-transition=blx-prerender"
 }
