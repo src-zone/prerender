@@ -2,6 +2,9 @@ let links = [];
 if (location.href.endsWith('index')) {
   links.push('link1');
   links.push('link2');
+  links.push('link2/');
+  links.push('link4/');
+  links.push('/index/');
   links.push(location.href.substring(location.href.lastIndexOf('/')) + '#abc');
 } else if (location.href.endsWith('link1')) {
     links.push('index');

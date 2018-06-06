@@ -6,13 +6,46 @@ import * as chalk from 'chalk';
 
 // Settings:
 export interface PrerenderSettings {
-    dist: string,
+    /**
+     * The root directory for your website (typically the 'dist' folder when building an SPA web application)
+     */
+    root: string,
+    /**
+     * The file that that bootstraps the web application.
+     * Typically 'index.html' for SPA apps.
+     */
     template: string,
+    /**
+     * The url to start the prerender from. Typically equal to the value given for property 'template',
+     * unless you want to serve files under different names, e.g. by removing the '.html' suffix, or by
+     * serving the 'index.html' under '/'.
+     */
     seed: string,
+    /**
+     * Selector for the element(s) that contain (and bootstrap) your web app. In an angular app this is
+     * the selector of your bootstrap component(s).
+     */
     bootstrap: string[],
+
     appId: string,
+    /**
+     * The port to use for the server while prerendering your site. The default is 4000, but any valid open port
+     * will do.
+     */
     port: number,
-    htmlSuffix?: string
+    /**
+     * Suffix to add to generated pages. This option should be used if your webserver is configured to serve
+     * requests for page urls by adding e.g. an ".html" suffix. When set to ".html", this will store
+     * page 'a/b/name' as 'a/b/name.html'.
+     */
+    htmlSuffix?: string,
+    /**
+     * Sets the file that will be used for page urls that end with a '/'. Thus page 'a/b/' will be stored
+     * as a file under the name directoryIndex in the 'a/b' directory. If not set, the page will be stored
+     * with under the name of the directory with the htmlSuffix added. So when directoryIndex is not set,
+     * and htmlSuffix = ".html", page 'a/b/' will be stored under 'a/b.html'.
+     */
+    directoryIndex?: string
 }
 
 // Data accumulated during rendering:
@@ -66,8 +99,12 @@ async function renderNextPage(renderScope: RenderScope, page: puppeteer.Page, te
 
     // Get the html for the page:
     const ext = renderScope.settings.htmlSuffix ? renderScope.settings.htmlSuffix : '';
-    const file = path.join(renderScope.settings.dist, pagePath + ext);
-    
+    const file = (pagePath.endsWith('/') || pagePath.length === 0) ?
+        (renderScope.settings.directoryIndex ?
+            path.join(renderScope.settings.root, pagePath, renderScope.settings.directoryIndex) :
+            path.join(renderScope.settings.root, pagePath.substring(0, pagePath.length - 1) + ext) // ''.substring(0, -1) === ''
+        ) : path.join(renderScope.settings.root, pagePath + ext);
+
     let content: string = await page.content();
     harvestNewLinks(renderScope, pagePath, page);
     content = await rewriteHead(content, renderScope.settings, renderScope.browser);
@@ -86,7 +123,13 @@ async function renderNextPage(renderScope: RenderScope, page: puppeteer.Page, te
     // Compute new todoPages & donePages:
     renderScope.donePages.add(pagePath);
     renderScope.todoPages.delete(pagePath);
-
+    if (renderScope.settings.directoryIndex == null) {
+        // no directoryIndex means 'a/b' and 'a/b/' will map to the same filename
+        // we will only process the first occurence of such entries:
+        let aliasPagePath = pagePath.endsWith('/') ? pagePath.substring(0, pagePath.length - 1) : (pagePath + '/');
+        renderScope.donePages.add(aliasPagePath);
+        renderScope.todoPages.delete(aliasPagePath);
+    }
     return templateRenderedContent;
 }
 
@@ -100,11 +143,13 @@ async function harvestNewLinks(renderScope: RenderScope, pagePath: string, page:
     });
     hrefs
         .filter(h => h != null)
-        .map(h => h.startsWith(renderScope.host) ? h.substring(renderScope.host.length) : h)
-        .map(h => h.indexOf('#') !== -1 ? h.substring(0, h.indexOf('#')) : h)
-        .filter(h => h.indexOf("://") == -1)
         .map(h => h.trim())
-        .filter(h => h.length > 0)
+        .map(h => h.startsWith(renderScope.host) ? h.substring(renderScope.host.length) : h) // drop scheme://host if local url
+        .map(h => h.indexOf('#') !== -1 ? h.substring(0, h.indexOf('#')) : h)                // drop hash suffix
+        .filter(h => h.indexOf("://") == -1)         // filter out url's to other websites (local urls are rewritten above)
+        .filter(h => !/^\s*[a-zA-Z]+\s*\:/.test(h))  // filter out url's for other schemes, e.g. javascript:***
+        .map(h => h.trim())                          // trim again in case rewrites left spaces on either end
+        .filter(h => h.length > 0)                   // filter out empty url's
         .map(h => pathFromRoot(pagePath, h)).forEach(s => {
             if (!renderScope.donePages.has(s) && !renderScope.todoPages.has(s))
                 renderScope.todoPages.add(s);
@@ -131,7 +176,7 @@ function pathFromRoot(pagePath: string, linkPath: string) {
 
 async function initializeRenderScope(settings: PrerenderSettings) {
     // Getting the html content for the default html to bootstrap pages:
-    const templateFile = path.join(settings.dist, settings.template);
+    const templateFile = path.join(settings.root, settings.template);
     const originalTemplateContent = fs.readFileSync(templateFile).toString();
     const browser = await puppeteer.launch();    
     return {
@@ -212,7 +257,7 @@ async function rewriteBody(content: string, templateContent: string, settings: P
 function startServer(renderScope: RenderScope) {
     const app = express();
     // Serve static files as is:
-    app.get('*.*', express.static(renderScope.settings.dist));
+    app.get('*.*', express.static(renderScope.settings.root));
     // Serve templateContent for any other request:
     app.get('*', (_, res) => res.send(renderScope.templateContent));
     // Start the express server:
