@@ -20,7 +20,7 @@
         "clean": "rimraf dist coverage test/actual",
         "build": "npm run clean && tsc",
         "test": "nyc jasmine JASMINE_CONFIG_PATH=jasmine.json",
-        "prepare-release": "npm --no-git-tag-version version minor",
+        "prepare-minor-release": "npm --no-git-tag-version version minor",
         "prepare-major-release": "npm --no-git-tag-version version major",
         "prepare-patch-release": "npm --no-git-tag-version version patch",
         "commit-release": "node src/commit-release.js"
