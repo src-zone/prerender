@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { sync as globSync } from 'glob';
-import * as babel from 'babel-core';
+import * as babel from '@babel/core';
 const uglify = require('uglify-es');
 const replace = require('buffer-replace');
 
@@ -87,7 +87,8 @@ jsSources.forEach((name: string) => {
     if (verbose) {
         process.stdout.write('transpiling ' + (skipUglify ? '' : 'and minifying ') + name + ' to: ' + getTranspiledName(name));
     }
-    let output = babel.transformFileSync(path.join(rootDir, name), babelOptions).code;
+    let transformed = babel.transformFileSync(path.join(rootDir, name), babelOptions);
+    let output = transformed ? transformed.code : null;
     if (!output) {
         process.stdout.write(' [failed]\n');
         throw Error('transpilation failed');
