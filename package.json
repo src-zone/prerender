@@ -1,6 +1,6 @@
 {
     "name": "@blox/utils",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "description": "Utilities for working with Angular projects",
     "license": "Apache-2.0",
     "homepage": "https://github.com/src-zone/blox-utils",
