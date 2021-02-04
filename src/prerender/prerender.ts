@@ -108,7 +108,7 @@ async function renderNextPage(renderScope: RenderScope, page: puppeteer.Page, te
     const dir = path.dirname(file);
     fs.mkdirsSync(dir);
     fs.writeFileSync(file, content);
-    log(chalk.default.green(`Rendered: ${file}`));
+    log(chalk.green(`Rendered: ${file}`));
 
     // Compute new todoPages & donePages:
     renderScope.donePages.add(pagePath);
@@ -260,6 +260,6 @@ function startServer(renderScope: RenderScope) {
     app.get('*', (_, res) => res.send(renderScope.templateContent));
     // Start the express server:
     const server = app.listen(renderScope.settings.port);
-    log(chalk.default.green(`Prerender server started and listening at ${renderScope.host}`));
+    log(chalk.green(`Prerender server started and listening at ${renderScope.host}`));
     return server;
 }

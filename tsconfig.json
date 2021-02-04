@@ -13,7 +13,6 @@
       "sourceMap": true
     },
     "files": [
-      "src/transpile.ts",
       "src/prerender.ts",
 	    "src/prerender.spec.ts"
     ]

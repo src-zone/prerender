@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as tmp from 'tmp';
 import * as yargs from 'yargs';
 import { sync as globSync } from 'glob';
-import { prerender, PrerenderSettings } from './prerender/prerender';
+import { prerender } from './prerender/prerender';
 import { readConfig } from './prerender/cli';
 
 describe('prerender cli', (() => {
@@ -142,9 +142,9 @@ describe('prerender rendering', (() => {
         expect("missing files: [" + expectedButMissing + "]; unexpected files: [" + notExpected + "]")
             .toEqual("missing files: []; unexpected files: []");
         actualFiles.forEach(file => {
-            const actualContent = fs.readFileSync(path.join(actualDir, file));
-            const expectContent = fs.readFileSync(path.join(expectDir, file));
-            expect(expectContent.equals(actualContent)).toBeTruthy('files differ: ' + file);
+            const actualContent = fs.readFileSync(path.join(actualDir, file)).toString('utf8').replace(/\r/g, '');
+            const expectContent = fs.readFileSync(path.join(expectDir, file)).toString('utf8').replace(/\r/g, '');
+            expect(actualContent).toEqual(expectContent, 'files differ: ' + file);
         });
     }
     
