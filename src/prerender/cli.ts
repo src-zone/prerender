@@ -11,8 +11,8 @@ export function readConfig() {
                 type: "string",
                 describe: "Path to the config file",
                 default: "prerender.conf.json",
-                        requiresArg: true
-                }
+                requiresArg: true
+            }
         })
         .help().alias("help", "h")
         .version().alias("version", "v")
